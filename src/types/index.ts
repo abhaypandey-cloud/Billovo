@@ -3,9 +3,11 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  costPrice: number;
   category: string;
   stock: number;
   unit: string;
+  vatCategory: 'STANDARD' | 'ZERO_RATED' | 'EXEMPT';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,10 +19,11 @@ export interface Customer {
   phone: string;
   address: string;
   city: string;
-  state: string;
-  pincode: string;
-  gstNumber?: string;
+  emirate: string;
+  trn?: string;
   creditLimit: number;
+  paymentTerms: string;
+  status: 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,10 +35,11 @@ export interface Supplier {
   phone: string;
   address: string;
   city: string;
-  state: string;
-  pincode: string;
-  gstNumber?: string;
+  emirate: string;
+  trn?: string;
+  iban?: string;
   paymentTerms: string;
+  status: 'active' | 'inactive';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -45,20 +49,24 @@ export interface SaleItem {
   productName: string;
   quantity: number;
   price: number;
+  vatRate: number;
+  vatAmount: number;
   total: number;
 }
 
 export interface Sale {
   id: string;
+  invoiceNumber: string;
   customerId: string;
   customerName: string;
   items: SaleItem[];
   subtotal: number;
-  tax: number;
+  vatAmount: number;
   discount: number;
   total: number;
   paymentMethod: string;
   status: 'pending' | 'completed' | 'cancelled';
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -68,19 +76,24 @@ export interface PurchaseItem {
   productName: string;
   quantity: number;
   price: number;
+  vatRate: number;
+  vatAmount: number;
   total: number;
 }
 
 export interface Purchase {
   id: string;
+  poNumber: string;
   supplierId: string;
   supplierName: string;
   items: PurchaseItem[];
   subtotal: number;
-  tax: number;
+  vatAmount: number;
   discount: number;
   total: number;
+  paymentMethod: string;
   status: 'pending' | 'received' | 'cancelled';
+  notes?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -95,3 +108,13 @@ export interface InventoryMovement {
   reason: string;
   createdAt: Date;
 }
+
+export interface VATConfig {
+  companyTRN: string;
+  companyName: string;
+  vatRegistrationDate: string;
+  defaultVATRate: number;
+}
+
+// Legacy compatibility aliases
+export type GST = VATConfig;
