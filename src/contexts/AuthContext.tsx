@@ -33,7 +33,7 @@ export const useAuth = () => {
 
 // Demo users
 const DEMO_USERS: (AuthUser & { password: string })[] = [
-  { id: '1', username: 'admin', email: 'admin@billevo.ae', password: 'admin123', role: 'admin', fullName: 'Ahmed Al Rashidi' },
+  { id: '1', username: 'admin', email: 'admin@billevo.ae', password: 'admin123', role: 'admin', fullName: 'Abhay Pandey' },
   { id: '2', username: 'manager', email: 'manager@billevo.ae', password: 'manager123', role: 'manager', fullName: 'Sara Abdullah' },
   { id: '3', username: 'accountant', email: 'accountant@billevo.ae', password: 'acc123', role: 'accountant', fullName: 'Khalid Hassan' },
 ];
