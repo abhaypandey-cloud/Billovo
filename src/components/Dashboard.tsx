@@ -11,7 +11,8 @@ const fmt = (n: number) => `د.إ ${n.toLocaleString('en-AE', { minimumFractionD
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
-  const { products, customers, sales, purchases } = useData();
+  const { products, customers, sales, purchases, formatAmount } = useData();
+  const fmt = formatAmount;
 
   const now = new Date();
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening';
@@ -38,7 +39,7 @@ const Dashboard: React.FC = () => {
   const outOfStock = products.filter(p => p.stock === 0);
   const activeCustomers = customers.filter(c => c.status === 'active').length;
 
-  const totalVATCollected = completedSales.reduce((a, s) => a + (s.vatAmount ?? 0), 0);
+  const totalVATCollected = completedSales.reduce((a, s) => a + (s.taxBreakdown?.totalTax ?? s.vatAmount ?? 0), 0);
 
   // Recent data
   const recentSales = [...sales].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 5);
@@ -109,7 +110,7 @@ const Dashboard: React.FC = () => {
       icon: Percent,
       color: 'text-indigo-600',
       bg: 'bg-indigo-50 dark:bg-indigo-900/20',
-      sub: '5% UAE VAT',
+      sub: '5% Tax',
     },
     {
       label: 'Total Customers',

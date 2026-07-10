@@ -6,7 +6,6 @@ import {
   ChevronDown, FileText, CheckCircle, XCircle, Clock
 } from 'lucide-react';
 
-const fmt = (n: number) => `د.إ ${n.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const VAT_RATE = 0.05;
 
 interface LineItem {
@@ -22,7 +21,8 @@ const emptyLine = (): LineItem => ({ productId: '', productName: '', quantity: 1
 type Tab = 'all' | 'pending' | 'completed' | 'cancelled';
 
 const Sales: React.FC = () => {
-  const { sales, setSales, products, setProducts, customers, nextInvoiceNumber, setInventory } = useData();
+  const { sales, setSales, products, setProducts, customers, nextInvoiceNumber, setInventory, formatAmount } = useData();
+  const fmt = formatAmount;
   const [tab, setTab] = useState<Tab>('all');
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -114,8 +114,24 @@ const Sales: React.FC = () => {
       invoiceNumber: nextInvoiceNumber(),
       customerId: formCustomerId,
       customerName: customer?.name ?? '',
-      items,
+      invoiceDate: new Date().toISOString().split('T')[0],
+      items: items.map(item => ({
+        ...item,
+        taxRate: item.vatRate ?? 0,
+        taxBreakdown: {
+          taxableAmount: item.price * item.quantity,
+          vat: item.vatAmount ?? 0,
+          totalTax: item.vatAmount ?? 0,
+          taxRate: item.vatRate ?? 0,
+        },
+      })),
       subtotal: sub,
+      taxBreakdown: {
+        taxableAmount: sub,
+        vat: vat,
+        totalTax: vat,
+        taxRate: 5,
+      },
       vatAmount: vat,
       discount: formDiscount,
       total,

@@ -5,13 +5,14 @@ import {
   Download, Percent, DollarSign, ShoppingCart, ShoppingBag
 } from 'lucide-react';
 
-const fmt = (n: number) => `د.إ ${n.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtN = (n: number) => n.toLocaleString('en-AE', { minimumFractionDigits: 0 });
 
 type Tab = 'overview' | 'sales' | 'purchases' | 'inventory' | 'vat';
 
 const Reports: React.FC = () => {
-  const { sales, purchases, products, customers, suppliers, vatConfig } = useData();
+  const { sales, purchases, products, customers, suppliers, vatConfig, formatAmount } = useData();
+  const fmt = formatAmount;
+  const fmtN = (n: number) => n.toLocaleString(undefined, { minimumFractionDigits: 0 });
   const [tab, setTab] = useState<Tab>('overview');
 
   // Core calculations
@@ -19,8 +20,8 @@ const Reports: React.FC = () => {
   const receivedPurchases = purchases.filter(p => p.status === 'received');
   const totalRevenue = completedSales.reduce((a, s) => a + s.total, 0);
   const totalPurchaseCost = receivedPurchases.reduce((a, p) => a + p.total, 0);
-  const totalVATCollected = completedSales.reduce((a, s) => a + (s.vatAmount ?? 0), 0);
-  const totalInputVAT = receivedPurchases.reduce((a, p) => a + (p.vatAmount ?? 0), 0);
+  const totalVATCollected = completedSales.reduce((a, s) => a + (s.taxBreakdown?.totalTax ?? s.vatAmount ?? 0), 0);
+  const totalInputVAT = receivedPurchases.reduce((a, p) => a + (p.taxBreakdown?.totalTax ?? p.vatAmount ?? 0), 0);
   const netVAT = totalVATCollected - totalInputVAT;
 
   const totalCOGS = completedSales.reduce((sum, sale) => {

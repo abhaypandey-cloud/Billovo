@@ -14,6 +14,11 @@ import Inventory from './components/transactions/Inventory';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import RequireAuth from './components/RequireAuth';
+import ChartOfAccounts from './components/accounting/ChartOfAccounts';
+import JournalEntries from './components/accounting/JournalEntries';
+import AccountingReports from './components/accounting/AccountingReports';
+import GSTReports from './components/accounting/GSTReports';
+import CompanySettingsPage from './components/settings/CompanySettings';
 
 function App() {
   return (
@@ -31,16 +36,26 @@ function App() {
               }
             >
               <Route index element={<Dashboard />} />
+              {/* Masters */}
               <Route path="products" element={<Products />} />
               <Route path="customers" element={<Customers />} />
               <Route path="suppliers" element={<Suppliers />} />
               <Route path="vat" element={<VAT />} />
-              {/* Redirect old /gst route to /vat */}
               <Route path="gst" element={<Navigate to="/vat" replace />} />
+              {/* Transactions */}
               <Route path="sales" element={<Sales />} />
               <Route path="purchases" element={<Purchases />} />
               <Route path="inventory" element={<Inventory />} />
+              {/* Accounting */}
+              <Route path="accounting/accounts" element={<ChartOfAccounts />} />
+              <Route path="accounting/journals" element={<JournalEntries />} />
+              <Route path="accounting/reports" element={<AccountingReports />} />
+              {/* Tax Returns */}
+              <Route path="tax/returns" element={<GSTReports />} />
+              {/* Reports */}
               <Route path="reports" element={<Reports />} />
+              {/* Settings */}
+              <Route path="settings/company" element={<CompanySettingsPage />} />
             </Route>
           </Routes>
         </Router>

@@ -3,7 +3,6 @@ import { useData } from '../../contexts/DataContext';
 import { Purchase, PurchaseItem } from '../../types';
 import { Plus, Search, Eye, X, Trash2, ShoppingBag, CheckCircle, XCircle, Clock, Printer } from 'lucide-react';
 
-const fmt = (n: number) => `د.إ ${n.toLocaleString('en-AE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const VAT_RATE = 0.05;
 
 interface LineItem {
@@ -18,7 +17,8 @@ const emptyLine = (): LineItem => ({ productId: '', productName: '', quantity: 1
 type Tab = 'all' | 'pending' | 'received' | 'cancelled';
 
 const Purchases: React.FC = () => {
-  const { purchases, setPurchases, products, setProducts, suppliers, nextPoNumber, setInventory } = useData();
+  const { purchases, setPurchases, products, setProducts, suppliers, nextPoNumber, setInventory, formatAmount } = useData();
+  const fmt = formatAmount;
   const [tab, setTab] = useState<Tab>('all');
   const [search, setSearch] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -106,8 +106,24 @@ const Purchases: React.FC = () => {
       poNumber: nextPoNumber(),
       supplierId: formSupplierId,
       supplierName: supplier?.name ?? '',
-      items,
+      invoiceDate: new Date().toISOString().split('T')[0],
+      items: items.map(item => ({
+        ...item,
+        taxRate: item.vatRate ?? 5,
+        taxBreakdown: {
+          taxableAmount: item.price * item.quantity,
+          vat: item.vatAmount ?? 0,
+          totalTax: item.vatAmount ?? 0,
+          taxRate: item.vatRate ?? 5,
+        },
+      })),
       subtotal: sub,
+      taxBreakdown: {
+        taxableAmount: sub,
+        vat: vat,
+        totalTax: vat,
+        taxRate: 5,
+      },
       vatAmount: vat,
       discount: formDiscount,
       total,
