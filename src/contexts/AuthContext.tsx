@@ -16,6 +16,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   otpPending: boolean;
   otpEmail: string;
+  currentOtp: string;
   login: (email: string, password: string) => Promise<{ success: boolean; requiresOtp?: boolean; error?: string }>;
   verifyOtp: (otp: string) => Promise<{ success: boolean; error?: string }>;
   resendOtp: () => void;
@@ -113,7 +114,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, otpPending, otpEmail, login, verifyOtp, resendOtp, logout, can }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, otpPending, otpEmail, currentOtp, login, verifyOtp, resendOtp, logout, can }}>
       {children}
     </AuthContext.Provider>
   );

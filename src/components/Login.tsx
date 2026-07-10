@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Eye, EyeOff, Shield, BarChart3, Globe, ArrowRight, RefreshCw,
-  ChevronLeft, CheckCircle2, Zap, Lock
+  ChevronLeft, Zap, Lock
 } from 'lucide-react';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, verifyOtp, resendOtp, otpPending, otpEmail, isAuthenticated } = useAuth();
+  const { login, verifyOtp, resendOtp, otpPending, otpEmail, currentOtp, isAuthenticated } = useAuth();
 
   useEffect(() => { if (isAuthenticated) navigate('/'); }, [isAuthenticated, navigate]);
 
@@ -240,17 +240,25 @@ const Login: React.FC = () => {
                 </div>
                 <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Verify OTP</h2>
                 <p className="text-slate-500 dark:text-slate-400">
-                  A 6-digit code was sent to{' '}
+                  A 6-digit code has been generated for{' '}
                   <span className="font-medium text-slate-700 dark:text-slate-300">{otpEmail}</span>
                 </p>
               </div>
 
-              <div className="mb-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-amber-700 dark:text-amber-300">
-                  Check the <strong>browser console</strong> (F12) for your OTP code
-                </p>
-              </div>
+              {/* OTP displayed on screen */}
+              {currentOtp && (
+                <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-400 dark:border-green-600 rounded-2xl text-center">
+                  <p className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-widest mb-2">
+                    Your OTP Code
+                  </p>
+                  <p className="text-4xl font-bold tracking-[0.3em] text-green-700 dark:text-green-300 font-mono">
+                    {currentOtp}
+                  </p>
+                  <p className="text-xs text-green-600 dark:text-green-500 mt-2">
+                    Copy this code and enter it below
+                  </p>
+                </div>
+              )}
 
               {otpError && (
                 <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-700 dark:text-red-300">
