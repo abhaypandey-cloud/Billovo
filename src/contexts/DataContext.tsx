@@ -106,8 +106,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [vatConfig, setVatConfig] = useLocalStorage<VATConfig>('billevo_vat_config', DEFAULT_VAT_CONFIG);
   const [companySettings, setCompanySettings] = useLocalStorage<CompanySettings>('billevo_company_v2', DEFAULT_COMPANY);
 
-  // Accounting
-  const [accounts, setAccounts] = useLocalStorage<Account[]>('billevo_accounts', () =>
+  // Accounting — with sanitization to prevent stale data crashes
+  const [accountsRaw, setAccountsRaw] = useLocalStorage<Account[]>('billevo_accounts', () =>
     getDefaultAccounts(DEFAULT_COMPANY.country).map((a, i) => ({
       ...a,
       id: `acc-${i + 1}`,
@@ -115,7 +115,48 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       updatedAt: new Date(),
     }))
   );
-  const [journalEntries, setJournalEntries] = useLocalStorage<JournalEntry[]>('billevo_journals', []);
+  const accounts: Account[] = (Array.isArray(accountsRaw) ? accountsRaw : []).map((a: any) => ({
+    id: a.id ?? crypto.randomUUID(),
+    code: a.code ?? '',
+    name: a.name ?? '',
+    type: a.type ?? 'Asset',
+    group: a.group ?? 'Current Asset',
+    description: a.description ?? '',
+    isSystem: a.isSystem ?? false,
+    isActive: a.isActive ?? true,
+    openingBalance: Number(a.openingBalance) || 0,
+    openingBalanceType: a.openingBalanceType ?? 'Dr',
+    createdAt: a.createdAt ? new Date(a.createdAt) : new Date(),
+    updatedAt: a.updatedAt ? new Date(a.updatedAt) : new Date(),
+  }));
+  const setAccounts = setAccountsRaw as typeof setAccountsRaw;
+
+  const [journalEntriesRaw, setJournalEntriesRaw] = useLocalStorage<JournalEntry[]>('billevo_journals', []);
+  const journalEntries: JournalEntry[] = (Array.isArray(journalEntriesRaw) ? journalEntriesRaw : []).map((e: any) => ({
+    id: e.id ?? crypto.randomUUID(),
+    entryNumber: e.entryNumber ?? 'JV-0',
+    date: e.date ?? new Date().toISOString().split('T')[0],
+    narration: e.narration ?? '',
+    reference: e.reference ?? '',
+    lines: Array.isArray(e.lines) ? e.lines.map((l: any) => ({
+      id: l.id ?? crypto.randomUUID(),
+      accountId: l.accountId ?? '',
+      accountName: l.accountName ?? '',
+      accountCode: l.accountCode ?? '',
+      debit: Number(l.debit) || 0,
+      credit: Number(l.credit) || 0,
+      narration: l.narration ?? '',
+    })) : [],
+    totalDebit: Number(e.totalDebit) || 0,
+    totalCredit: Number(e.totalCredit) || 0,
+    status: e.status ?? 'posted',
+    source: e.source ?? 'manual',
+    sourceId: e.sourceId,
+    createdAt: e.createdAt ? new Date(e.createdAt) : new Date(),
+    updatedAt: e.updatedAt ? new Date(e.updatedAt) : new Date(),
+  }));
+  const setJournalEntries = setJournalEntriesRaw as typeof setJournalEntriesRaw;
+
   const [payments, setPayments] = useLocalStorage<Payment[]>('billevo_payments', []);
 
   // Counters

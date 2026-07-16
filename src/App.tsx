@@ -19,6 +19,7 @@ import JournalEntries from './components/accounting/JournalEntries';
 import AccountingReports from './components/accounting/AccountingReports';
 import GSTReports from './components/accounting/GSTReports';
 import CompanySettingsPage from './components/settings/CompanySettings';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
@@ -46,16 +47,36 @@ function App() {
               <Route path="sales" element={<Sales />} />
               <Route path="purchases" element={<Purchases />} />
               <Route path="inventory" element={<Inventory />} />
-              {/* Accounting */}
-              <Route path="accounting/accounts" element={<ChartOfAccounts />} />
-              <Route path="accounting/journals" element={<JournalEntries />} />
-              <Route path="accounting/reports" element={<AccountingReports />} />
+              {/* Accounting — wrapped with ErrorBoundary to catch stale data crashes */}
+              <Route path="accounting/accounts" element={
+                <ErrorBoundary fallbackTitle="Chart of Accounts Error">
+                  <ChartOfAccounts />
+                </ErrorBoundary>
+              } />
+              <Route path="accounting/journals" element={
+                <ErrorBoundary fallbackTitle="Journal Entries Error">
+                  <JournalEntries />
+                </ErrorBoundary>
+              } />
+              <Route path="accounting/reports" element={
+                <ErrorBoundary fallbackTitle="Accounting Reports Error">
+                  <AccountingReports />
+                </ErrorBoundary>
+              } />
               {/* Tax Returns */}
-              <Route path="tax/returns" element={<GSTReports />} />
+              <Route path="tax/returns" element={
+                <ErrorBoundary fallbackTitle="Tax Returns Error">
+                  <GSTReports />
+                </ErrorBoundary>
+              } />
               {/* Reports */}
               <Route path="reports" element={<Reports />} />
               {/* Settings */}
-              <Route path="settings/company" element={<CompanySettingsPage />} />
+              <Route path="settings/company" element={
+                <ErrorBoundary fallbackTitle="Company Settings Error">
+                  <CompanySettingsPage />
+                </ErrorBoundary>
+              } />
             </Route>
           </Routes>
         </Router>
