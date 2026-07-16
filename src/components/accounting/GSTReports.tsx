@@ -32,8 +32,34 @@ function getMonths(): { label: string; value: string }[] {
   return months;
 }
 
-function filterByPeriod<T extends { invoiceDate: string }>(items: T[], period: string): T[] {
-  return items.filter(i => i.invoiceDate.startsWith(period));
+function filterByPeriod<T extends { invoiceDate?: string; createdAt?: Date | string }>(items: T[], period: string): T[] {
+  return items.filter(i => {
+    // Use invoiceDate if available, fall back to createdAt
+    const dateStr = i.invoiceDate
+      ? String(i.invoiceDate)
+      : i.createdAt
+        ? new Date(i.createdAt).toISOString().split('T')[0]
+        : '';
+    return dateStr.startsWith(period);
+  });
+}
+
+// Safe date formatter — handles undefined/null invoiceDate by falling back to createdAt
+function safeDate(invoiceDate?: string, createdAt?: Date | string, locale = 'en-IN'): string {
+  try {
+    const d = invoiceDate || (createdAt ? new Date(createdAt).toISOString().split('T')[0] : '');
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString(locale);
+  } catch {
+    return '—';
+  }
+}
+
+// Safe tax breakdown extraction with fallbacks
+function getTax(item: { taxBreakdown?: { cgst?: number; sgst?: number; igst?: number; vat?: number; totalTax?: number; taxableAmount?: number }; subtotal?: number; vatAmount?: number }, field: 'cgst' | 'sgst' | 'igst' | 'vat' | 'totalTax' | 'taxableAmount'): number {
+  if (field === 'taxableAmount') return item.taxBreakdown?.taxableAmount ?? item.subtotal ?? 0;
+  if (field === 'totalTax') return item.taxBreakdown?.totalTax ?? item.vatAmount ?? 0;
+  return item.taxBreakdown?.[field] ?? 0;
 }
 
 function exportJSON(data: unknown, filename: string) {
@@ -118,13 +144,13 @@ const GSTR1Tab: React.FC<{ sales: Sale[]; period: string; formatAmount: (n: numb
                     <td className="px-3 py-2.5 font-mono text-xs text-slate-600 dark:text-slate-400">{s.customerGSTIN}</td>
                     <td className={tdCls}>{s.customerName}</td>
                     <td className={tdCls}>{s.invoiceNumber}</td>
-                    <td className={tdCls}>{new Date(s.invoiceDate).toLocaleDateString('en-IN')}</td>
+                    <td className={tdCls}>{safeDate(s.invoiceDate, s.createdAt, 'en-IN')}</td>
                     <td className={amtCls}>{formatAmount(s.total)}</td>
                     <td className={tdCls}>{s.placeOfSupply ?? '—'}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.taxableAmount ?? s.subtotal)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.cgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.sgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.igst ?? 0)}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'taxableAmount'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'cgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'sgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'igst'))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -145,11 +171,11 @@ const GSTR1Tab: React.FC<{ sales: Sale[]; period: string; formatAmount: (n: numb
                   <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition">
                     <td className={tdCls}>{s.customerName}</td>
                     <td className={tdCls}>{s.invoiceNumber}</td>
-                    <td className={tdCls}>{new Date(s.invoiceDate).toLocaleDateString('en-IN')}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.taxableAmount ?? s.subtotal)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.cgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.sgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.igst ?? 0)}</td>
+                    <td className={tdCls}>{safeDate(s.invoiceDate, s.createdAt, 'en-IN')}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'taxableAmount'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'cgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'sgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'igst'))}</td>
                   </tr>
                 ))}
               </tbody>
@@ -231,12 +257,12 @@ const GSTR2Tab: React.FC<{ purchases: Purchase[]; period: string; formatAmount: 
                     <td className="px-3 py-2.5 font-mono text-xs text-slate-600 dark:text-slate-400">{p.supplierGSTIN ?? '—'}</td>
                     <td className={tdCls}>{p.supplierName}</td>
                     <td className={tdCls}>{p.poNumber}</td>
-                    <td className={tdCls}>{new Date(p.invoiceDate).toLocaleDateString('en-IN')}</td>
+                    <td className={tdCls}>{safeDate(p.invoiceDate, p.createdAt, 'en-IN')}</td>
                     <td className={amtCls}>{formatAmount(p.total)}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.taxableAmount ?? p.subtotal)}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.cgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.sgst ?? 0)}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.igst ?? 0)}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'taxableAmount'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'cgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'sgst'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'igst'))}</td>
                     <td className="px-3 py-2.5">
                       <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Eligible</span>
                     </td>
@@ -420,9 +446,9 @@ const GenericTaxReport: React.FC<{ sales: Sale[]; purchases: Purchase[]; period:
                   <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition">
                     <td className={tdCls}>{s.invoiceNumber}</td>
                     <td className={tdCls}>{s.customerName}</td>
-                    <td className={tdCls}>{new Date(s.invoiceDate).toLocaleDateString()}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.taxableAmount ?? s.subtotal)}</td>
-                    <td className={amtCls}>{formatAmount(s.taxBreakdown?.totalTax ?? s.vatAmount ?? 0)}</td>
+                    <td className={tdCls}>{safeDate(s.invoiceDate, s.createdAt)}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'taxableAmount'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(s, 'totalTax'))}</td>
                     <td className={amtCls}>{formatAmount(s.total)}</td>
                   </tr>
                 ))}
@@ -444,9 +470,9 @@ const GenericTaxReport: React.FC<{ sales: Sale[]; purchases: Purchase[]; period:
                   <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/20 transition">
                     <td className={tdCls}>{p.poNumber}</td>
                     <td className={tdCls}>{p.supplierName}</td>
-                    <td className={tdCls}>{new Date(p.invoiceDate).toLocaleDateString()}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.taxableAmount ?? p.subtotal)}</td>
-                    <td className={amtCls}>{formatAmount(p.taxBreakdown?.totalTax ?? p.vatAmount ?? 0)}</td>
+                    <td className={tdCls}>{safeDate(p.invoiceDate, p.createdAt)}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'taxableAmount'))}</td>
+                    <td className={amtCls}>{formatAmount(getTax(p, 'totalTax'))}</td>
                     <td className={amtCls}>{formatAmount(p.total)}</td>
                   </tr>
                 ))}
